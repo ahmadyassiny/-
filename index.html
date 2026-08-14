@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Supermarché Ahmed | متجر ولوحة تحكم</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Tahoma,sans-serif;background:#f5f7f6;color:#1f2937}
+header{background:#138a4b;color:white;padding:14px;position:sticky;top:0;z-index:5}.bar{max-width:1050px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}.brand{font-weight:800;font-size:20px}
+button{border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}.light{background:white;color:#138a4b}.green{background:#138a4b;color:white}.dark{background:#222;color:white}.danger{background:#e74c3c;color:white}
+.container{max-width:1050px;margin:auto;padding:18px}.hero{background:white;border-radius:18px;padding:24px;text-align:center;margin-bottom:15px}.hero h1{color:#138a4b;margin:5px}.cats{display:flex;gap:8px;overflow:auto;margin-bottom:15px}.cats button{background:white;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px}.card{background:white;border-radius:16px;padding:12px;box-shadow:0 2px 10px #0000000b}.photo{height:140px;background:#edf7f1;border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:55px}.photo img{width:100%;height:100%;object-fit:cover}.price{color:#138a4b;font-size:18px;font-weight:800}.muted{color:#6b7280;font-size:13px}.actions{display:flex;gap:6px;margin-top:8px}.actions button{flex:1;padding:8px}
+.panel{background:white;border-radius:16px;padding:18px;margin-bottom:15px}input,select{width:100%;padding:11px;margin:5px 0 10px;border:1px solid #ddd;border-radius:9px}label{font-weight:700;font-size:14px}
+.hidden{display:none}.modal{position:fixed;inset:0;background:#0008;z-index:20;padding:15px;overflow:auto}.modalbox{background:white;max-width:520px;margin:30px auto;border-radius:18px;padding:18px}.close{float:left;background:#eee}.row{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #eee;padding:10px 0}.qty button{padding:5px 9px}.orderbtn{width:100%;margin-top:12px;background:#138a4b;color:white}
+.tabs{display:flex;gap:8px;margin-bottom:15px}.tabs button{flex:1}.notice{background:#fff8dc;padding:10px;border-radius:10px;font-size:13px;margin-bottom:12px}
+footer{text-align:center;color:#777;padding:30px}
+@media(max-width:480px){.brand{font-size:16px}.hero h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header><div class="bar"><div class="brand">🛒 Supermarché Ahmed</div><div>
+<button class="light" onclick="openCart()">السلة (<span id="cartCount">0</span>)</button>
+<button class="light" onclick="showAdmin()">لوحة المالك</button></div></div></header>
+
+<main class="container" id="shop">
+<section class="hero"><h1>مرحبا بكم في Supermarché Ahmed</h1><p>منتجاتكم اليومية في أكادير</p><p>📞 0612726642</p></section>
+<div class="cats"><button onclick="filter('الكل')">الكل</button><button onclick="filter('شكلاط')">🍫 شكلاط</button><button onclick="filter('بسكويت')">🍪 بسكويت</button><button onclick="filter('مشروبات')">🥤 مشروبات</button><button onclick="filter('أخرى')">🛍️ أخرى</button></div>
+<div id="products" class="grid"></div>
+</main>
+
+<section class="container hidden" id="admin">
+<div class="tabs"><button class="dark" onclick="showShop()">← المتجر</button><button class="green" onclick="logout()">تسجيل الخروج</button></div>
+<div class="panel">
+<h2>⚙️ لوحة تحكم المالك</h2>
+<div class="notice">المنتجات والطلبات محفوظة في هذا المتصفح. هذه نسخة أولية تعمل محلياً؛ للنشر على الإنترنت وقاعدة بيانات مشتركة بين الأجهزة تحتاج استضافة/قاعدة بيانات.</div>
+<h3 id="formTitle">➕ إضافة منتج</h3>
+<input type="hidden" id="editId">
+<label>اسم المنتج</label><input id="pName" placeholder="مثال: Bimo">
+<label>الثمن (درهم)</label><input id="pPrice" type="number" step="0.01" placeholder="2.50">
+<label>الكمية</label><input id="pStock" type="number" min="0" placeholder="10">
+<label>التصنيف</label><select id="pCat"><option>شكلاط</option><option>بسكويت</option><option>مشروبات</option><option>أخرى</option></select>
+<label>صورة المنتج</label><input id="pImage" type="file" accept="image/*" capture="environment">
+<button class="green" onclick="saveProduct()">حفظ المنتج</button>
+<button class="hidden" id="cancelEdit" onclick="resetForm()">إلغاء التعديل</button>
+</div>
+<div class="panel"><h3>📦 منتجاتي</h3><div id="adminProducts"></div></div>
+</section>
+
+<div class="modal hidden" id="login"><div class="modalbox"><button class="close" onclick="closeLogin()">✕</button><h2>🔐 دخول المالك</h2><p class="muted">كلمة المرور الافتراضية: <b>1234</b> — غيّرها لاحقاً عند تطوير النسخة المتصلة بقاعدة بيانات.</p><input id="pass" type="password" placeholder="كلمة المرور"><button class="green" onclick="login()">دخول</button></div></div>
+
+<div class="modal hidden" id="cart"><div class="modalbox"><button class="close" onclick="closeCart()">✕</button><h2>🛒 سلة المشتريات</h2><div id="cartItems"></div><h3>المجموع: <span id="total">0.00</span> د.م</h3><hr><h3>بيانات التوصيل</h3><input id="cName" placeholder="الاسم"><input id="cPhone" placeholder="رقم الهاتف"><input id="cAddress" placeholder="العنوان في أكادير"><button class="orderbtn" onclick="sendOrder()">إرسال الطلب عبر WhatsApp</button></div></div>
+
+<footer>© 2026 Supermarché Ahmed — أكادير</footer>
+
+<script>
+const KEY='super_ahmed_products_v2', CART='super_ahmed_cart_v2';
+let products=JSON.parse(localStorage.getItem(KEY)||'null')||[
+{id:1,name:'شكلاط',price:10,stock:20,cat:'شكلاط',image:''},
+{id:2,name:'Bimo',price:2.5,stock:30,cat:'بسكويت',image:''},
+{id:3,name:'مشروب غازي',price:6,stock:20,cat:'مشروبات',image:''}
+];
+let cart=JSON.parse(localStorage.getItem(CART)||'[]');
+
+function persist(){localStorage.setItem(KEY,JSON.stringify(products));localStorage.setItem(CART,JSON.stringify(cart))}
+function render(list=products){
+document.getElementById('products').innerHTML=list.map(p=>`<div class="card"><div class="photo">${p.image?`<img src="${p.image}">`:'🛒'}</div><h3>${esc(p.name)}</h3><div class="price">${Number(p.price).toFixed(2)} د.م</div><div class="muted">المتوفر: ${p.stock}</div><button class="green" style="width:100%;margin-top:8px" onclick="add(${p.id})" ${p.stock<1?'disabled':''}>أضف للسلة</button></div>`).join('')||'<p>لا توجد منتجات.</p>';
+updateCart();
+}
+function filter(c){render(c==='الكل'?products:products.filter(p=>p.cat===c))}
+function add(id){let p=products.find(x=>x.id===id);if(!p||p.stock<1)return;let item=cart.find(x=>x.id===id);if(item)item.qty++;else cart.push({id,qty:1});persist();updateCart();alert('تمت إضافة المنتج للسلة')}
+function updateCart(){document.getElementById('cartCount').textContent=cart.reduce((s,x)=>s+x.qty,0)}
+function openCart(){document.getElementById('cart').classList.remove('hidden');drawCart()}
+function closeCart(){document.getElementById('cart').classList.add('hidden')}
+function drawCart(){
+let box=document.getElementById('cartItems'), total=0;
+if(!cart.length){box.innerHTML='<p>السلة فارغة.</p>';document.getElementById('total').textContent='0.00';return}
+box.innerHTML=cart.map(x=>{let p=products.find(a=>a.id===x.id);if(!p)return'';let t=p.price*x.qty;total+=t;return `<div class="row"><span>${esc(p.name)}<br><small>${p.price.toFixed(2)} د.م</small></span><span class="qty"><button onclick="changeQty(${p.id},-1)">−</button> ${x.qty} <button onclick="changeQty(${p.id},1)">+</button></span><b>${t.toFixed(2)} د.م</b></div>`}).join('');
+document.getElementById('total').textContent=total.toFixed(2)
+}
+function changeQty(id,d){let x=cart.find(a=>a.id===id),p=products.find(a=>a.id===id);if(!x)return;x.qty+=d;if(x.qty<=0)cart=cart.filter(a=>a.id!==id);if(x.qty>p.stock)x.qty=p.stock;persist();drawCart();updateCart()}
+function sendOrder(){
+if(!cart.length)return alert('السلة فارغة');
+let n=document.getElementById('cName').value.trim(),ph=document.getElementById('cPhone').value.trim(),ad=document.getElementById('cAddress').value.trim();
+if(!n||!ph||!ad)return alert('أدخل الاسم والهاتف والعنوان');
+let total=0, lines=cart.map(x=>{let p=products.find(a=>a.id===x.id);total+=p.price*x.qty;return `- ${p.name} × ${x.qty} = ${(p.price*x.qty).toFixed(2)} DH`}).join('\\n');
+let msg=`السلام عليكم، طلب جديد من Supermarché Ahmed\\nالاسم: ${n}\\nالهاتف: ${ph}\\nالعنوان: ${ad}\\nالمنتجات:\\n${lines}\\nالمجموع: ${total.toFixed(2)} DH`;
+window.open('https://wa.me/212612726642?text='+encodeURIComponent(msg),'_blank')
+}
+function showAdmin(){document.getElementById('login').classList.remove('hidden');document.getElementById('pass').focus()}
+function closeLogin(){document.getElementById('login').classList.add('hidden')}
+function login(){if(document.getElementById('pass').value==='1234'){closeLogin();document.getElementById('shop').classList.add('hidden');document.getElementById('admin').classList.remove('hidden');drawAdmin()}else alert('كلمة المرور غير صحيحة')}
+function showShop(){document.getElementById('admin').classList.add('hidden');document.getElementById('shop').classList.remove('hidden');render()}
+function logout(){showShop()}
+function drawAdmin(){
+document.getElementById('adminProducts').innerHTML=products.map(p=>`<div class="row"><span><b>${esc(p.name)}</b><br>${p.price.toFixed(2)} DH · الكمية ${p.stock}</span><span><button class="green" onclick="editProduct(${p.id})">تعديل</button> <button class="danger" onclick="deleteProduct(${p.id})">حذف</button></span></div>`).join('')
+}
+function saveProduct(){
+let name=document.getElementById('pName').value.trim(),price=Number(document.getElementById('pPrice').value),stock=Number(document.getElementById('pStock').value),cat=document.getElementById('pCat').value,id=Number(document.getElementById('editId').value),file=document.getElementById('pImage').files[0];
+if(!name||!price||stock<0)return alert('أكمل بيانات المنتج');
+const finish=(image)=>{if(id){let p=products.find(x=>x.id===id);Object.assign(p,{name,price,stock,cat});if(image)p.image=image}else products.push({id:Date.now(),name,price,stock,cat,image:image||''});persist();resetForm();drawAdmin();render();alert('تم حفظ المنتج')};
+if(file){let r=new FileReader();r.onload=()=>finish(r.result);r.readAsDataURL(file)}else finish('')
+}
+function editProduct(id){let p=products.find(x=>x.id===id);document.getElementById('editId').value=id;document.getElementById('pName').value=p.name;document.getElementById('pPrice').value=p.price;document.getElementById('pStock').value=p.stock;document.getElementById('pCat').value=p.cat;document.getElementById('formTitle').textContent='✏️ تعديل المنتج';document.getElementById('cancelEdit').classList.remove('hidden');scrollTo(0,0)}
+function deleteProduct(id){if(confirm('حذف هذا المنتج؟')){products=products.filter(p=>p.id!==id);cart=cart.filter(x=>x.id!==id);persist();drawAdmin();render()}}
+function resetForm(){['editId','pName','pPrice','pStock'].forEach(id=>document.getElementById(id).value='');document.getElementById('pImage').value='';document.getElementById('formTitle').textContent='➕ إضافة منتج';document.getElementById('cancelEdit').classList.add('hidden')}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+render();
+</script>
+</body></html>
